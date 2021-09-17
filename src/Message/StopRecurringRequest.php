@@ -2,7 +2,7 @@
 
 namespace Omnipay\TwoCheckoutPlus\Message;
 
-use Guzzle\Http\Exception\BadResponseException;
+use Omnipay\Common\Http\Exception\RequestException;
 
 /**
  * Purchase Request.
@@ -79,17 +79,20 @@ class StopRecurringRequest extends AbstractRequest
         unset($payload['admin_password']);
 
         try {
-            $response = $this->httpClient->post(
+            $headers = $this->getRequestHeaders();
+            $headers['auth'] = [$data['admin_username'], $data['admin_password']];
+            $response = $this->httpClient->request(
+                'POST',
                 $this->getEndpoint(),
-                $this->getRequestHeaders(),
+                $headers,
                 $payload
-            )->setAuth($data['admin_username'], $data['admin_password'])->send();
+            );
 
-            return new StopRecurringResponse($this, $response->json());
-        } catch (BadResponseException $e) {
+            return new StopRecurringResponse($this, json_decode($response->getBody()->getContents()));
+        } catch (RequestException $e) {
             $response = $e->getResponse();
 
-            return new StopRecurringResponse($this, $response->json());
+            return new StopRecurringResponse($this, json_decode($response));
         }
     }
 }

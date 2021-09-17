@@ -2,7 +2,7 @@
 
 namespace Omnipay\TwoCheckoutPlus\Message;
 
-use Guzzle\Http\Exception\BadResponseException;
+use Omnipay\Common\Http\Exception\RequestException;
 
 /**
  * Purchase Request.
@@ -98,17 +98,18 @@ class TokenPurchaseRequest extends AbstractRequest
     public function sendData($data)
     {
         try {
-            $response = $this->httpClient->post(
+            $response = $this->httpClient->request(
+                'POST',
                 $this->getEndpoint(),
                 $this->getRequestHeaders(),
                 json_encode($data)
-            )->send();
+            );
 
-            return new TokenPurchaseResponse($this, $response->json());
-        } catch (BadResponseException $e) {
+            return new TokenPurchaseResponse($this, json_decode($response->getBody()->getContents()));
+        } catch (RequestException $e) {
             $response = $e->getResponse();
 
-            return new TokenPurchaseResponse($this, $response->json());
+            return new TokenPurchaseResponse($this, json_decode($response));
         }
     }
 }
